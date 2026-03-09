@@ -45,7 +45,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			log.Panic(err)
+		}
+	}(f)
 
 	var config Config
 	decoder := yaml.NewDecoder(f)
@@ -55,7 +60,10 @@ func main() {
 	}
 
 	queries := InitDB(config.DatasourceDir)
-	client, _ := InitMqtt(config.MqttUrl, config.MqttDevices, *queries)
+	_, err = InitMqtt(config.MqttUrl, config.MqttDevices, *queries)
+	if err != nil {
+		panic(err)
+	}
 
 	handler, err := Api(*queries, config)
 
@@ -66,6 +74,6 @@ func main() {
 	log.Println("Starting server on " + config.BaseUrl)
 	log.Fatal(http.ListenAndServe(config.BaseUrl, handler))
 
-	client.Disconnect(250)
+	//client.Disconnect(250)
 
 }
