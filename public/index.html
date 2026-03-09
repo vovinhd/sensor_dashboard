@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+<!--    <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.6.0/moment-timezone.min.js"></script>-->
+    <script src="https://momentjs.com/downloads/moment-timezone-with-data.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+
+    <script defer src="index.js"></script>
+<!--    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>-->
+
+    <!--    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>-->
+<!--    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>-->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+<main class="container">
+<h1>Luftfeuchtigkeitsdaten</h1>
+
+
+<form class="select-form">
+
+    <div class="pickers">
+
+    <label for="tag-select">Daten von
+    <select name="tag-select" id="tag-select">
+        <option value="">--Lade--</option>
+    </select>
+    </label>
+    <label for="range-select">Wie lange?
+
+    <select name="range-select" id="range-select">
+        <option value="3" selected>3 Stunden</option>
+        <option value="6">6 Stunden</option>
+        <option value="12">12 Stunden</option>
+        <option value="24">1 Tag</option>
+        <option value="72">3 Tage</option>
+        <option value="72">3 Tage</option>
+        <option value="168">1 Woche</option>
+    </select>
+    </div>
+
+    </label>
+    <input type="submit" value="Anwenden" id="submit-select">
+</form>
+
+<div class="chart-container">
+    <canvas id="humChart" class="chart"> Lade...</canvas>
+    <canvas id="pwrChart" class="chart"> Lade...</canvas>
+</div>
+</main>
+
+<!--<form>-->
+
+<!--    <label for="range-select">Choose a range:</label>-->
+
+<!--    <select name="range-select" id="table-select">-->
+<!--        <option value="">&#45;&#45;Please choose an option&#45;&#45;</option>-->
+<!--        <option value="humidity">Luftfeuchtigkeit</option>-->
+<!--        <option value="power">Stromverbrauch</option>-->
+<!--    </select>-->
+
+<!--    <input type="submit" value="Submit" id="submit-table-select">-->
+<!--</form>-->
+
+</body>
+
+</html>

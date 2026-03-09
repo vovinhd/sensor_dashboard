@@ -1,0 +1,5 @@
+/.env
+/.venv/
+/persist/
+/.idea/
+/.vscode/

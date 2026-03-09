@@ -1,0 +1,20 @@
+base_url: "localhost:8080"
+mqtt_url: "tcp://192.168.178.139:1883"
+mqtt_devices:
+  - name: "plexi01"
+    topic: "tele/plexi01/SENSOR"
+    type: "humidity"
+    tag: "Bad Unten"
+
+  - name: "mere01"
+    topic: "tele/mere01/SENSOR"
+    type: "power"
+    tag: "Bad Unten"
+
+  - name: "mere01result"
+    topic: "stat/mere01/RESULT"
+    type: "switch"
+    tag: "Bad Unten"
+
+datasource_dir: "./persist"
+serve_from_fs: true
