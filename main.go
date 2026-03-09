@@ -15,6 +15,7 @@ type Config struct {
 	MqttDevices   []MqttDevice `yaml:"mqtt_devices"`
 	DatasourceDir string       `yaml:"datasource_dir"`
 	ServeFromFS   bool         `yaml:"serve_from_fs"`
+	MqttClientId  string       `yaml:"client_id"`
 }
 
 type MqttDevice struct {
@@ -60,7 +61,7 @@ func main() {
 	}
 
 	queries := InitDB(config.DatasourceDir)
-	_, err = InitMqtt(config.MqttUrl, config.MqttDevices, *queries)
+	_, err = InitMqtt(config.MqttUrl, config.MqttClientId, config.MqttDevices, *queries)
 	if err != nil {
 		panic(err)
 	}

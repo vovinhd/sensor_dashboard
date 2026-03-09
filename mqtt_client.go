@@ -172,7 +172,7 @@ func createDeviceTags(queries db.Queries, sensors []MqttDevice) error {
 
 }
 
-func InitMqtt(brokerUrl string, sensors []MqttDevice, queries db.Queries) (mqtt.Client, error) {
+func InitMqtt(brokerUrl string, clientId string, sensors []MqttDevice, queries db.Queries) (mqtt.Client, error) {
 
 	err := createDeviceTags(queries, sensors)
 
@@ -183,7 +183,7 @@ func InitMqtt(brokerUrl string, sensors []MqttDevice, queries db.Queries) (mqtt.
 	log.Println("Listening for sensors:", sensors)
 
 	opts := mqtt.NewClientOptions().AddBroker(brokerUrl)
-	opts.SetClientID("go-mqtt-dashboard")
+	opts.SetClientID(clientId)
 	opts.SetKeepAlive(2 * time.Second)
 	opts.SetPingTimeout(1 * time.Second)
 	opts.SetDefaultPublishHandler(wildcardHandler)

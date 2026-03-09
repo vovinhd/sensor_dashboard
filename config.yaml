@@ -18,3 +18,4 @@ mqtt_devices:
 
 datasource_dir: "./persist"
 serve_from_fs: true
+client_id: "go-mqtt-thing"
