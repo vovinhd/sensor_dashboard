@@ -104,6 +104,11 @@ select tag
 from device_tag
 group by tag;
 
+-- name: ListSensorsForDevice :many
+select *
+from device_tag
+where tag = ?;
+
 -- name: GetDeviceTag :one
 select *
 from device_tag
@@ -112,16 +117,9 @@ limit 1;
 
 -- name: CreateDeviceTag :one
 insert
-into device_tag (device_name, tag)
-values (?, ?)
+into device_tag (device_name, device_type, tag)
+values (?, ?, ?)
 returning *;
-
--- name: UpdateDeviceTag :one
-UPDATE device_tag
-set device_name = ?,
-    tag         = ?
-WHERE id = ?
-RETURNING *;
 
 -- name: DeleteDeviceTag :exec
 delete

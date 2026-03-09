@@ -12,26 +12,34 @@ import (
 
 const createDeviceTag = `-- name: CreateDeviceTag :one
 insert
-into device_tag (device_name, tag)
-values (?, ?) returning id, device_name, tag
+into device_tag (device_name, device_type, tag)
+values (?, ?, ?)
+returning id, device_name, device_type, tag
 `
 
 type CreateDeviceTagParams struct {
 	DeviceName string
+	DeviceType string
 	Tag        string
 }
 
 func (q *Queries) CreateDeviceTag(ctx context.Context, arg CreateDeviceTagParams) (DeviceTag, error) {
-	row := q.db.QueryRowContext(ctx, createDeviceTag, arg.DeviceName, arg.Tag)
+	row := q.db.QueryRowContext(ctx, createDeviceTag, arg.DeviceName, arg.DeviceType, arg.Tag)
 	var i DeviceTag
-	err := row.Scan(&i.ID, &i.DeviceName, &i.Tag)
+	err := row.Scan(
+		&i.ID,
+		&i.DeviceName,
+		&i.DeviceType,
+		&i.Tag,
+	)
 	return i, err
 }
 
 const createHumidityLog = `-- name: CreateHumidityLog :one
 insert
-into humidity_log (time, sensor , temperature, humidity, dew_point)
-values (?, ?, ?, ?, ?) returning id, time, sensor, temperature, humidity, dew_point
+into humidity_log (time, sensor, temperature, humidity, dew_point)
+values (?, ?, ?, ?, ?)
+returning id, time, sensor, temperature, humidity, dew_point
 `
 
 type CreateHumidityLogParams struct {
@@ -64,8 +72,10 @@ func (q *Queries) CreateHumidityLog(ctx context.Context, arg CreateHumidityLogPa
 
 const createPowerLog = `-- name: CreatePowerLog :one
 insert
-into power_log (time, sensor, total_start_time, total, yesterday, today, period, power, apparent_power, reactive_power, factor, voltage, current, sensor_temperature)
-values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id, time, sensor, total_start_time, total, yesterday, today, period, power, apparent_power, reactive_power, factor, voltage, "current", sensor_temperature
+into power_log (time, sensor, total_start_time, total, yesterday, today, period, power, apparent_power, reactive_power,
+                factor, voltage, current, sensor_temperature)
+values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+returning id, time, sensor, total_start_time, total, yesterday, today, period, power, apparent_power, reactive_power, factor, voltage, "current", sensor_temperature
 `
 
 type CreatePowerLogParams struct {
@@ -125,8 +135,9 @@ func (q *Queries) CreatePowerLog(ctx context.Context, arg CreatePowerLogParams) 
 
 const createSwitchStateLog = `-- name: CreateSwitchStateLog :one
 insert
-into switch_state_log (time, sensor , switch_state)
-values (?, ?, ?) returning id, time, sensor, switch_state
+into switch_state_log (time, sensor, switch_state)
+values (?, ?, ?)
+returning id, time, sensor, switch_state
 `
 
 type CreateSwitchStateLogParams struct {
@@ -192,22 +203,29 @@ func (q *Queries) DeleteSwitchStateLog(ctx context.Context, id int64) error {
 }
 
 const getDeviceTag = `-- name: GetDeviceTag :one
-select id, device_name, tag
+select id, device_name, device_type, tag
 from device_tag
-where id = ? limit 1
+where id = ?
+limit 1
 `
 
 func (q *Queries) GetDeviceTag(ctx context.Context, id int64) (DeviceTag, error) {
 	row := q.db.QueryRowContext(ctx, getDeviceTag, id)
 	var i DeviceTag
-	err := row.Scan(&i.ID, &i.DeviceName, &i.Tag)
+	err := row.Scan(
+		&i.ID,
+		&i.DeviceName,
+		&i.DeviceType,
+		&i.Tag,
+	)
 	return i, err
 }
 
 const getHumidityLog = `-- name: GetHumidityLog :one
 select id, time, sensor, temperature, humidity, dew_point
 from humidity_log
-where id = ? limit 1
+where id = ?
+limit 1
 `
 
 func (q *Queries) GetHumidityLog(ctx context.Context, id int64) (HumidityLog, error) {
@@ -227,7 +245,8 @@ func (q *Queries) GetHumidityLog(ctx context.Context, id int64) (HumidityLog, er
 const getPowerLog = `-- name: GetPowerLog :one
 select id, time, sensor, total_start_time, total, yesterday, today, period, power, apparent_power, reactive_power, factor, voltage, "current", sensor_temperature
 from power_log
-where id = ? limit 1
+where id = ?
+limit 1
 `
 
 func (q *Queries) GetPowerLog(ctx context.Context, id int64) (PowerLog, error) {
@@ -256,7 +275,8 @@ func (q *Queries) GetPowerLog(ctx context.Context, id int64) (PowerLog, error) {
 const getSwitchStateLog = `-- name: GetSwitchStateLog :one
 select id, time, sensor, switch_state
 from switch_state_log
-where id = ? limit 1
+where id = ?
+limit 1
 `
 
 func (q *Queries) GetSwitchStateLog(ctx context.Context, id int64) (SwitchStateLog, error) {
@@ -272,11 +292,11 @@ func (q *Queries) GetSwitchStateLog(ctx context.Context, id int64) (SwitchStateL
 }
 
 const humidityLogForDeviceToDate = `-- name: HumidityLogForDeviceToDate :many
-select humidity_log.id, time, sensor, temperature, humidity, dew_point, device_tag.id, device_name, tag
+select humidity_log.id, time, sensor, temperature, humidity, dew_point, device_tag.id, device_name, device_type, tag
 from humidity_log
-join device_tag on device_name = humidity_log.sensor
+         join device_tag on device_name = humidity_log.sensor
 where device_tag.tag = ?
-    and (time between ? and ?)
+  and (time between ? and ?)
 order by time desc
 `
 
@@ -295,6 +315,7 @@ type HumidityLogForDeviceToDateRow struct {
 	DewPoint    float64
 	ID_2        int64
 	DeviceName  string
+	DeviceType  string
 	Tag         string
 }
 
@@ -316,6 +337,7 @@ func (q *Queries) HumidityLogForDeviceToDate(ctx context.Context, arg HumidityLo
 			&i.DewPoint,
 			&i.ID_2,
 			&i.DeviceName,
+			&i.DeviceType,
 			&i.Tag,
 		); err != nil {
 			return nil, err
@@ -332,7 +354,7 @@ func (q *Queries) HumidityLogForDeviceToDate(ctx context.Context, arg HumidityLo
 }
 
 const listDeviceTag = `-- name: ListDeviceTag :many
-select id, device_name, tag
+select id, device_name, device_type, tag
 from device_tag
 `
 
@@ -345,7 +367,12 @@ func (q *Queries) ListDeviceTag(ctx context.Context) ([]DeviceTag, error) {
 	var items []DeviceTag
 	for rows.Next() {
 		var i DeviceTag
-		if err := rows.Scan(&i.ID, &i.DeviceName, &i.Tag); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.DeviceName,
+			&i.DeviceType,
+			&i.Tag,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -360,7 +387,9 @@ func (q *Queries) ListDeviceTag(ctx context.Context) ([]DeviceTag, error) {
 }
 
 const listDevices = `-- name: ListDevices :many
-select tag from device_tag group by tag
+select tag
+from device_tag
+group by tag
 `
 
 func (q *Queries) ListDevices(ctx context.Context) ([]string, error) {
@@ -389,7 +418,8 @@ func (q *Queries) ListDevices(ctx context.Context) ([]string, error) {
 const listHumidityLog = `-- name: ListHumidityLog :many
 select id, time, sensor, temperature, humidity, dew_point
 from humidity_log
-order by time desc limit ? offset ?
+order by time desc
+limit ? offset ?
 `
 
 type ListHumidityLogParams struct {
@@ -430,7 +460,8 @@ func (q *Queries) ListHumidityLog(ctx context.Context, arg ListHumidityLogParams
 const listPowerLog = `-- name: ListPowerLog :many
 select id, time, sensor, total_start_time, total, yesterday, today, period, power, apparent_power, reactive_power, factor, voltage, "current", sensor_temperature
 from power_log
-order by time desc limit ? offset ?
+order by time desc
+limit ? offset ?
 `
 
 type ListPowerLogParams struct {
@@ -477,10 +508,45 @@ func (q *Queries) ListPowerLog(ctx context.Context, arg ListPowerLogParams) ([]P
 	return items, nil
 }
 
+const listSensorsForDevice = `-- name: ListSensorsForDevice :many
+select id, device_name, device_type, tag
+from device_tag
+where tag = ?
+`
+
+func (q *Queries) ListSensorsForDevice(ctx context.Context, tag string) ([]DeviceTag, error) {
+	rows, err := q.db.QueryContext(ctx, listSensorsForDevice, tag)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DeviceTag
+	for rows.Next() {
+		var i DeviceTag
+		if err := rows.Scan(
+			&i.ID,
+			&i.DeviceName,
+			&i.DeviceType,
+			&i.Tag,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSwitchStateLog = `-- name: ListSwitchStateLog :many
 select id, time, sensor, switch_state
 from switch_state_log
-order by time desc limit ? offset ?
+order by time desc
+limit ? offset ?
 `
 
 type ListSwitchStateLogParams struct {
@@ -517,7 +583,7 @@ func (q *Queries) ListSwitchStateLog(ctx context.Context, arg ListSwitchStateLog
 }
 
 const powerLogForDeviceToDate = `-- name: PowerLogForDeviceToDate :many
-select power_log.id, time, sensor, total_start_time, total, yesterday, today, period, power, apparent_power, reactive_power, factor, voltage, "current", sensor_temperature, device_tag.id, device_name, tag
+select power_log.id, time, sensor, total_start_time, total, yesterday, today, period, power, apparent_power, reactive_power, factor, voltage, "current", sensor_temperature, device_tag.id, device_name, device_type, tag
 from power_log
          join device_tag on device_name = power_log.sensor
 where device_tag.tag = ?
@@ -549,6 +615,7 @@ type PowerLogForDeviceToDateRow struct {
 	SensorTemperature float64
 	ID_2              int64
 	DeviceName        string
+	DeviceType        string
 	Tag               string
 }
 
@@ -579,6 +646,7 @@ func (q *Queries) PowerLogForDeviceToDate(ctx context.Context, arg PowerLogForDe
 			&i.SensorTemperature,
 			&i.ID_2,
 			&i.DeviceName,
+			&i.DeviceType,
 			&i.Tag,
 		); err != nil {
 			return nil, err
@@ -595,7 +663,7 @@ func (q *Queries) PowerLogForDeviceToDate(ctx context.Context, arg PowerLogForDe
 }
 
 const switchStateLogForDeviceToDate = `-- name: SwitchStateLogForDeviceToDate :many
-select switch_state_log.id, time, sensor, switch_state, device_tag.id, device_name, tag
+select switch_state_log.id, time, sensor, switch_state, device_tag.id, device_name, device_type, tag
 from switch_state_log
          join device_tag on device_name = switch_state_log.sensor
 where device_tag.tag = ?
@@ -616,6 +684,7 @@ type SwitchStateLogForDeviceToDateRow struct {
 	SwitchState string
 	ID_2        int64
 	DeviceName  string
+	DeviceType  string
 	Tag         string
 }
 
@@ -635,6 +704,7 @@ func (q *Queries) SwitchStateLogForDeviceToDate(ctx context.Context, arg SwitchS
 			&i.SwitchState,
 			&i.ID_2,
 			&i.DeviceName,
+			&i.DeviceType,
 			&i.Tag,
 		); err != nil {
 			return nil, err
@@ -651,31 +721,11 @@ func (q *Queries) SwitchStateLogForDeviceToDate(ctx context.Context, arg SwitchS
 }
 
 const truncateDeviceTag = `-- name: TruncateDeviceTag :exec
-delete from device_tag
+delete
+from device_tag
 `
 
 func (q *Queries) TruncateDeviceTag(ctx context.Context) error {
 	_, err := q.db.ExecContext(ctx, truncateDeviceTag)
 	return err
-}
-
-const updateDeviceTag = `-- name: UpdateDeviceTag :one
-UPDATE device_tag
-set device_name = ?,
-    tag = ?
-WHERE id = ?
-RETURNING id, device_name, tag
-`
-
-type UpdateDeviceTagParams struct {
-	DeviceName string
-	Tag        string
-	ID         int64
-}
-
-func (q *Queries) UpdateDeviceTag(ctx context.Context, arg UpdateDeviceTagParams) (DeviceTag, error) {
-	row := q.db.QueryRowContext(ctx, updateDeviceTag, arg.DeviceName, arg.Tag, arg.ID)
-	var i DeviceTag
-	err := row.Scan(&i.ID, &i.DeviceName, &i.Tag)
-	return i, err
 }

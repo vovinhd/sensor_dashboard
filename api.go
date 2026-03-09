@@ -32,6 +32,7 @@ func Api(queries db.Queries, config Config) (http.Handler, error) {
 	mux.Handle("/humidity", GetHumidityLogByDate(queries, config))
 	mux.Handle("/power", GetPowerLogByDate(queries, config))
 	mux.Handle("/state", GetSwitchStateLogByDate(queries, config))
+	mux.Handle("/tags/devices", GetDevicesForTag(queries, config))
 	mux.Handle("/tags", GetTags(queries, config))
 
 	mux.Handle("/", fileServer)
@@ -63,6 +64,33 @@ func GetTags(queries db.Queries, config Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		rows, err := queries.ListDevices(context.Background())
+
+		if err != nil {
+			http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)
+			log.Printf("Error: %v", err)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(rows); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Printf("Error encoding JSON: %v", err)
+		}
+
+	})
+}
+
+func GetDevicesForTag(queries db.Queries, config Config) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		q := r.URL.Query()
+		tag := q.Get("tag")
+		if tag == "" {
+			http.Error(w, "400 Bad Request", http.StatusBadRequest)
+			return
+		}
+
+		rows, err := queries.ListSensorsForDevice(context.Background(), tag)
 
 		if err != nil {
 			http.Error(w, "500 Internal Server Error", http.StatusInternalServerError)

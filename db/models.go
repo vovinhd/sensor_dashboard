@@ -11,6 +11,7 @@ import (
 type DeviceTag struct {
 	ID         int64
 	DeviceName string
+	DeviceType string
 	Tag        string
 }
 

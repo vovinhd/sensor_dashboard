@@ -39,5 +39,6 @@ create table if not exists device_tag
 (
     id integer primary key,
     device_name text not null,
+    device_type text not null,
     tag text not null
 )

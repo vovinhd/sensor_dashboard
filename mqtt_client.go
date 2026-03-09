@@ -161,6 +161,7 @@ func createDeviceTags(queries db.Queries, sensors []MqttDevice) error {
 		_, err = queries.CreateDeviceTag(context.Background(), db.CreateDeviceTagParams{
 			DeviceName: sensor.Name,
 			Tag:        sensor.Tag,
+			DeviceType: sensor.Type,
 		})
 		if err != nil {
 			return err
